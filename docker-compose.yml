@@ -1,0 +1,50 @@
+# APP Node with MongoDB
+version: "3.8"
+
+services:
+  # Mongo
+  mongodb:
+    container_name: mongodb
+    image: mongo
+    restart: unless-stopped
+    env_file: ./.env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=$DB_USER
+      - MONGO_INITDB_ROOT_PASSWORD=$DB_PASSWORD
+    ports:
+      - $DB_PORT:$DB_PORT
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - network_app
+
+  # App Node
+  app:
+    container_name: app
+    image: app-node-mongo
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+    env_file: ./.env
+    ports:
+      - $NODE_LOCAL_PORT:$NODE_DOCKER_PORT
+    environment:
+      - DB_HOST=mongodb
+      - DB_USER=$DB_USER
+      - DB_PASSWORD=$DB_PASSWORD
+      - DB_NAME=$DB_NAME
+      - DB_PORT=$DB_PORT
+    volumes:
+      - app_data:/app
+    networks:
+      - network_app
+
+# Networks
+networks:
+  network_app:
+    driver: bridge
+
+# Volumes
+volumes:
+  mongo_data:
+  app_data:
